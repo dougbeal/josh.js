@@ -664,7 +664,7 @@ Josh.Version = "0.2.9";
     function subscribeToKeys() {
 
       // set up key capture
-      _element.onkeydown = function(e) {
+      _element.onFirst( 'keydown', function(e) {
         e = e || window.event;
 
         // return as unhandled if we're not active or the key is just a modifier key
@@ -696,9 +696,9 @@ Josh.Version = "0.2.9";
         e.stopPropagation();
         e.cancelBubble = true;
         return false;
-      };
+      });
 
-      _element.onkeypress = function(e) {
+      _element.onFirst( 'keypress', function(e) {
         if(!_active) {
           return true;
         }
@@ -717,7 +717,7 @@ Josh.Version = "0.2.9";
         e.stopPropagation();
         e.cancelBubble = true;
         return false;
-      };
+      });
     }
     if(_boundToElement) {
       self.attach(_element);
