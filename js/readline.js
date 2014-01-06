@@ -662,9 +662,11 @@ Josh.Version = "0.2.9";
     }
 
     function subscribeToKeys() {
-
+        _console.log("[Josh.ReadLine] binding %O", _element);
       // set up key capture
-      _element.onkeydown = function(e) {
+      //_element.onkeydown = keydownhandler;
+      _element.addEventListener('keydown', keydownhandler, true);
+      function keydownhandler (e) {
         e = e || window.event;
 
         // return as unhandled if we're not active or the key is just a modifier key
@@ -691,14 +693,16 @@ Josh.Version = "0.2.9";
         if(!cmd) {
           return true;
         }
-        queue(cmd);
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         e.cancelBubble = true;
+        queue(cmd);
         return false;
       };
-
-      _element.onkeypress = function(e) {
+      //_element.onkeypress = function onkeypresshandler
+      _element.addEventListener('keypress', onkeypresshandler, true);
+      function onkeypresshandler(e) {
         if(!_active) {
           return true;
         }
@@ -706,6 +710,10 @@ Josh.Version = "0.2.9";
         if(key.code == 0 || e.defaultPrevented || e.metaKey || e.altKey || e.ctrlKey) {
           return false;
         }
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.cancelBubble = true;
         queue(function cmdKeyPress() {
           if(_inSearch) {
             addSearchText(key.character);
@@ -713,9 +721,7 @@ Josh.Version = "0.2.9";
             addText(key.character);
           }
         });
-        e.preventDefault();
-        e.stopPropagation();
-        e.cancelBubble = true;
+
         return false;
       };
     }
