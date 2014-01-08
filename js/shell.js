@@ -48,14 +48,43 @@ var Josh = Josh || {};
         }
       },
       history: {
-        exec: function(cmd, args, callback) {
-          if(args[0] == "-c") {
-            _history.clear();
-            callback();
-            return;
-          }
-          callback(self.templates.history({items: _history.items()}));
-        }
+        exec: (function() {
+          var options = {};
+          var parser = new optparse.OptionParser(
+            [['-c', '--clear', "Clear history"],
+             ['-h', '--help', "Command help"],
+            ]);
+          parser.on("clear", function() {
+            options.clear = true;
+          });
+          parser.on("help", function() {
+            options.help = true;
+          });
+          parser.on(0, function() {
+            options.error = true;
+          });
+          parser.on('*', function() {
+            options.error = true;
+          });
+          return function(cmd, args, callback) {
+            parser.parse(args);
+            if(options.help) { 
+              callback(self.templates.options({help_string: parser.toString()})); 
+            }
+            else if(options.clear) {
+              _history.clear();
+              callback();
+            }
+            else if(options.error) {
+              callback(self.templates.bad_options({
+                help_string: parser.toString(),
+                options: args})); 
+            } 
+            else {
+              callback(self.templates.history({items: _history.items()}));
+            }
+          };
+        })()
       },
       _default: {
         exec: function(cmd, args, callback) {
@@ -85,6 +114,8 @@ var Josh = Josh || {};
       templates: {
         history: _.template("<div><% _.each(items, function(cmd, i) { %><div><%- i %>&nbsp;<%- cmd %></div><% }); %></div>"),
         help: _.template("<div><div><strong>Commands:</strong></div><% _.each(commands, function(cmd) { %><div>&nbsp;<%- cmd %></div><% }); %></div>"),
+        options: _.template("<div><pre><%- help_string %></pre></div>"),
+        bad_options: _.template('<div><strong>Unrecognized options:&nbsp;</strong><%=options%></div><div><pre><%- help_string %></pre></div>'),
         bad_command: _.template('<div><strong>Unrecognized command:&nbsp;</strong><%=cmd%></div>'),
         input_cmd: _.template('<div id="<%- id %>"><span class="prompt"></span>&nbsp;<span class="input"><span class="left"/><span class="cursor"/><span class="right"/></span></div>'),
         input_search: _.template('<div id="<%- id %>">(reverse-i-search)`<span class="searchterm"></span>\':&nbsp;<span class="input"><span class="left"/><span class="cursor"/><span class="right"/></span></div>'),
