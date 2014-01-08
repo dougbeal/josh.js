@@ -43,9 +43,11 @@ var Josh = Josh || {};
         }
       },
       help: {
-        exec: function(cmd, args, callback) {
-          callback(self.templates.help({commands: commands()}));
-        }
+        exec: (function(){
+          return function(cmd, args, callback) {
+            callback(self.templates.help({commands: commands()}));
+          };
+        })()
       },
       history: {
         exec: (function() {
