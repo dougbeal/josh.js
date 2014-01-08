@@ -1,0 +1,4 @@
+[submodule "ext/optparse-js"]
+	path = ext/optparse-js
+	url = https://github.com/dougbeal/optparse-js
+	branch = master
