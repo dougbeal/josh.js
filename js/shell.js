@@ -45,8 +45,22 @@ var Josh = Josh || {};
       help: {
         exec: (function(){
           return function(cmd, args, callback) {
-            callback(self.templates.help({commands: commands()}));
-          };
+            if(args.length === 0) {
+              callback(self.templates.help({commands: commands()}));
+            } else {
+              // get help on specified command
+              var command = args[0];
+              var handler = _cmdHandlers[command];
+              if( handler !== undefined) {
+                if(handler.help !== undefined) {
+                  callback(self.templates.command_help({'command': command,
+                                                  help_string: handler.help }));
+                } else {
+                  callback(self.templates.command_no_help({'command': command}));
+                }
+              } else {
+                callback(self.templates.bad_command({'cmd': command}));
+              }}};
         })()
       },
       history: {
@@ -61,27 +75,31 @@ var Josh = Josh || {};
           });
           parser.on("help", function() {
             options.help = true;
+            this.halt();
           });
           parser.on(0, function() {
             options.error = true;
+            this.halt();
           });
           parser.on('*', function() {
             options.error = true;
+            this.halt();
           });
           return function(cmd, args, callback) {
             parser.parse(args);
-            if(options.help) { 
-              callback(self.templates.options({help_string: parser.toString()})); 
+            _console.debug("[Josh.shell] options %O", options);
+            if(options.help) {
+              callback(self.templates.options({help_string: parser.toString()}));
+            }
+            else if(options.error) {
+              callback(self.templates.bad_options({
+                help_string: parser.toString(),
+                options: args}));
             }
             else if(options.clear) {
               _history.clear();
               callback();
             }
-            else if(options.error) {
-              callback(self.templates.bad_options({
-                help_string: parser.toString(),
-                options: args})); 
-            } 
             else {
               callback(self.templates.history({items: _history.items()}));
             }
@@ -116,6 +134,8 @@ var Josh = Josh || {};
       templates: {
         history: _.template("<div><% _.each(items, function(cmd, i) { %><div><%- i %>&nbsp;<%- cmd %></div><% }); %></div>"),
         help: _.template("<div><div><strong>Commands:</strong></div><% _.each(commands, function(cmd) { %><div>&nbsp;<%- cmd %></div><% }); %></div>"),
+        command_no_help: _.template("<div><strong>No help for command <%- command %></strong></div>"),
+        command_help: _.template("<div><strong>Command <%- command %>:</strong><%- help_string %></div>"),
         options: _.template("<div><pre><%- help_string %></pre></div>"),
         bad_options: _.template('<div><strong>Unrecognized options:&nbsp;</strong><%=options%></div><div><pre><%- help_string %></pre></div>'),
         bad_command: _.template('<div><strong>Unrecognized command:&nbsp;</strong><%=cmd%></div>'),
