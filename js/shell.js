@@ -85,7 +85,12 @@ var Josh = Josh || {};
             options.error = true;
             this.halt();
           });
+          parser.reset = function() {
+            options = {};
+            return parser._halt = false;
+          };
           return function(cmd, args, callback) {
+            parser.reset();
             parser.parse(args);
             _console.debug("[Josh.shell] options %O", options);
             if(options.help) {
